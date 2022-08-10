@@ -108,7 +108,7 @@ const int N_KEY_ROLL_OVER = 50;
           [self processKey:XK_Super_L
                  modifiers:(rime_modifiers | release_mask)];
           // do not update UI when using Command key
-          break;
+//          break;  // dr57
         }
         [self rimeUpdate];
       } break;
@@ -506,6 +506,9 @@ const int N_KEY_ROLL_OVER = 50;
     rime_get_api()->free_status(&status);
   }
 
+  // dr57
+  const char* raw_input = rime_get_api()->get_input(_session);
+  
   RIME_STRUCT(RimeContext, ctx);
   if (rime_get_api()->get_context(_session, &ctx)) {
     // update preedit text
@@ -516,6 +519,23 @@ const int N_KEY_ROLL_OVER = 50;
     NSUInteger end = utf8len(preedit, ctx.composition.sel_end);
     NSUInteger caretPos = utf8len(preedit, ctx.composition.cursor_pos);
     NSRange selRange = NSMakeRange(start, end - start);
+    // dr57
+    if (raw_input[0] != 'z'
+        && raw_input[0] != '`'
+        && raw_input[0] != '-'
+        && raw_input[0] != '='
+        && raw_input[0] != '0'
+        && raw_input[0] != '['
+        && raw_input[0] != ']'
+        && raw_input[0] != '\\'
+        && raw_input[0] != '\''
+        ) {
+      _inlineCandidate = true;
+//      _inlinePreedit = true;
+    } else {
+      _inlineCandidate = false;
+    }
+    
     if (_inlineCandidate) {
       const char *candidatePreview = ctx.commit_text_preview;
       NSString *candidatePreviewText = candidatePreview ? @(candidatePreview) : @"";
@@ -543,6 +563,40 @@ const int N_KEY_ROLL_OVER = 50;
         [self showPreeditString:(preedit ? @"　" : @"") selRange:empty caretPos:0];
       }
     }
+    
+    // dr57
+    // 开关：隐藏候选栏。
+    // 开关打开了，并且有候选项时隐藏候选栏。正常显示开关通知消息。
+    RIME_STRUCT(RimeStatus, status);
+    if (rime_get_api()->get_status(_session, &status)) {
+      if (status.is_hide_candidates) {
+        if (ctx.menu.num_candidates
+            && raw_input[0] != 'z'
+            && raw_input[0] != '`'
+            && raw_input[0] != '-'
+            && raw_input[0] != '='
+            && raw_input[0] != '0'
+            && raw_input[0] != '['
+            && raw_input[0] != ']'
+            && raw_input[0] != '\\'
+            && raw_input[0] != '\''
+            ) {
+          [NSApp.squirrelAppDelegate.panel hide];
+          rime_get_api()->free_status(&status);
+          rime_get_api()->free_context(&ctx);
+          return;
+        }
+      }
+      rime_get_api()->free_status(&status);
+    }
+    // 旧方法
+//    if (rime_get_api()->get_option(_session, "hide_candidates")
+//        && ctx.menu.num_candidates) {
+//      rime_get_api()->free_context(&ctx);
+//      [NSApp.squirrelAppDelegate.panel hide];
+//      return;
+//    }
+    
     // update candidates
     NSMutableArray *candidates = [NSMutableArray array];
     NSMutableArray *comments = [NSMutableArray array];

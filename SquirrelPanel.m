@@ -8,6 +8,9 @@ static const CGFloat kBlendedBackgroundColorFraction = 1.0 / 5;
 static const NSTimeInterval kShowStatusDuration = 1.2;
 static NSString *const kDefaultCandidateFormat = @"%c. %@";
 
+// dr57
+static CGFloat kFirstLabelWidth = 15;
+
 @interface SquirrelTheme : NSObject
 
 @property(nonatomic, assign) BOOL native;
@@ -890,15 +893,16 @@ void fixDefaultFont(NSMutableAttributedString *text) {
   NSRect windowRect;
   // in vertical mode, the width and height are interchanged
   NSRect contentRect = _view.contentRect;
-  if ((theme.vertical && NSMidY(_position) / NSHeight(_screenRect) < 0.5) ||
-      (!theme.vertical && NSMinX(_position)+MAX(contentRect.size.width, _maxHeight)+theme.edgeInset.width*2 > NSMaxX(_screenRect))) {
-    if (contentRect.size.width >= _maxHeight) {
-      _maxHeight = contentRect.size.width;
-    } else {
-      contentRect.size.width = _maxHeight;
-      _view.text.layoutManagers[0].textContainers[0].containerSize = NSMakeSize(_maxHeight, 0);
-    }
-  }
+  // dr57
+//  if ((theme.vertical && NSMidY(_position) / NSHeight(_screenRect) < 0.5) ||
+//      (!theme.vertical && NSMinX(_position)+MAX(contentRect.size.width, _maxHeight)+theme.edgeInset.width*2 > NSMaxX(_screenRect))) {
+//    if (contentRect.size.width >= _maxHeight) {
+//      _maxHeight = contentRect.size.width;
+//    } else {
+//      contentRect.size.width = _maxHeight;
+//      _view.text.layoutManagers[0].textContainers[0].containerSize = NSMakeSize(_maxHeight, 0);
+//    }
+//  }
 
   if (theme.vertical) {
     windowRect.size = NSMakeSize(contentRect.size.height + theme.edgeInset.height * 2,
@@ -918,8 +922,19 @@ void fixDefaultFont(NSMutableAttributedString *text) {
   } else {
     windowRect.size = NSMakeSize(contentRect.size.width + theme.edgeInset.width * 2,
                                  contentRect.size.height + theme.edgeInset.height * 2);
-    windowRect.origin = NSMakePoint(NSMinX(_position),
-                                    NSMinY(_position) - kOffsetHeight - NSHeight(windowRect));
+    // dr57 候选框向前偏移
+    // kFirstLabelWidth 第一个 label 的长度
+    // theme.edgeInset.width 是 border_width 的长度：
+    // edgeInset = NSMakeSize(MAX(borderWidth, cornerRadius), MAX(borderHeight, cornerRadius));
+//    windowRect.origin = NSMakePoint(NSMinX(_position) - kFirstLabelWidth - theme.edgeInset.width,
+//                                    NSMinY(_position) - kOffsetHeight - NSHeight(windowRect));
+    
+    // dr57: fixed candidates location
+    windowRect.origin = NSMakePoint(
+                                    (_screenRect.origin.x + _screenRect.size.width * (CGFloat)0.45)
+                                    ,
+                                    (_screenRect.origin.y + _screenRect.size.height * (CGFloat)0.07)
+                                    );
   }
 
   if (NSMaxX(windowRect) > NSMaxX(_screenRect)) {
@@ -1045,6 +1060,12 @@ void fixDefaultFont(NSMutableAttributedString *text) {
   // candidates
   NSUInteger i;
   for (i = 0; i < candidates.count; ++i) {
+    //    Dr57修改
+    // if (i == 0) {
+    //   continue;
+    // } else if (i >= 3) {
+    //   break;
+    // }
     NSMutableAttributedString *line = [[NSMutableAttributedString alloc] init];
 
     NSDictionary *attrs = (i == index) ? theme.highlightedAttrs : theme.attrs;
@@ -1079,6 +1100,10 @@ void fixDefaultFont(NSMutableAttributedString *text) {
       }
       if (!theme.linear) {
         labelWidth = [line boundingRectWithSize:NSZeroSize options:NSStringDrawingUsesLineFragmentOrigin].size.width;
+      }
+      // Dr57修改
+      if (i == 0) {
+        kFirstLabelWidth = [line boundingRectWithSize:NSZeroSize options:NSStringDrawingUsesLineFragmentOrigin].size.width;
       }
     }
 
@@ -1555,10 +1580,10 @@ static void updateTextOrientation(BOOL *isVerticalText, SquirrelConfig *config, 
   preeditHighlightedAttrs[NSFontAttributeName] = font;
   attrs[NSBaselineOffsetAttributeName] = @(baseOffset);
   highlightedAttrs[NSBaselineOffsetAttributeName] = @(baseOffset);
-  labelAttrs[NSBaselineOffsetAttributeName] = @(baseOffset);
-  labelHighlightedAttrs[NSBaselineOffsetAttributeName] = @(baseOffset);
-  commentAttrs[NSBaselineOffsetAttributeName] = @(baseOffset);
-  commentHighlightedAttrs[NSBaselineOffsetAttributeName] = @(baseOffset);
+  labelAttrs[NSBaselineOffsetAttributeName] = @(baseOffset + (fontSize - labelFontSize) / 4);
+  labelHighlightedAttrs[NSBaselineOffsetAttributeName] = @(baseOffset + (fontSize - labelFontSize) / 4);
+  commentAttrs[NSBaselineOffsetAttributeName] = @(baseOffset + (fontSize - commentFontSize) / 4);
+  commentHighlightedAttrs[NSBaselineOffsetAttributeName] = @(baseOffset + (fontSize - commentFontSize) / 4);
   preeditAttrs[NSBaselineOffsetAttributeName] = @(baseOffset);
   preeditHighlightedAttrs[NSBaselineOffsetAttributeName] = @(baseOffset);
 
