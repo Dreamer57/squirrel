@@ -41,7 +41,7 @@ $(RIME_LIBRARY):
 	$(MAKE) librime
 
 $(RIME_DEPS):
-	$(MAKE) -C librime xcode/thirdparty
+	$(MAKE) -C librime xcode/deps
 
 librime: $(RIME_DEPS)
 	$(MAKE) -C librime $(RIME_DIST_TARGET)
