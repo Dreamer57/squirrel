@@ -703,6 +703,8 @@ void expand(NSMutableArray<NSValue *> *vertex, NSRect innerBorder, NSRect outerB
 
   NSString *_statusMessage;
   NSTimer *_statusTimer;
+
+  BOOL *_isLookup;
 }
 
 - (BOOL)linear {
@@ -925,17 +927,19 @@ void fixDefaultFont(NSMutableAttributedString *text) {
 
     // dr57 开关状态通知正常显示
     if (_statusMessage) {
+      // dr57：开关状态通知正常显示。原版效果。
+      windowRect.origin = NSMakePoint(NSMinX(_position),
+                                      NSMinY(_position) - kOffsetHeight - NSHeight(windowRect));
+    } else if (_isLookup) {
+      // dr57：lookup时。
       // dr57 候选框向前偏移
       // kFirstLabelWidth 第一个 label 的长度
       // theme.edgeInset.width 是 border_width 的长度：
       // ：edgeInset = NSMakeSize(MAX(borderWidth, cornerRadius), MAX(borderHeight, cornerRadius));
-      // windowRect.origin = NSMakePoint(NSMinX(_position) - kFirstLabelWidth - theme.edgeInset.width,
-      //                                 NSMinY(_position) - kOffsetHeight - NSHeight(windowRect));
-
-      // dr57：开关状态通知正常显示。原版效果。
-      windowRect.origin = NSMakePoint(NSMinX(_position),
+      windowRect.origin = NSMakePoint(NSMinX(_position) - kFirstLabelWidth - theme.edgeInset.width,
                                       NSMinY(_position) - kOffsetHeight - NSHeight(windowRect));
-    } else {
+    }
+    else {
       // dr57: fixed candidates location
       windowRect.origin = NSMakePoint(
                                       (_screenRect.origin.x + _screenRect.size.width * (CGFloat)0.45)
@@ -1208,6 +1212,10 @@ void fixDefaultFont(NSMutableAttributedString *text) {
 
 - (void)updateStatus:(NSString *)message {
   _statusMessage = message;
+}
+
+- (void)updateIsLookup:(BOOL *)isLookup {
+  _isLookup = isLookup;
 }
 
 - (void)showStatus:(NSString *)message {

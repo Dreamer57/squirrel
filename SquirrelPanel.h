@@ -28,6 +28,8 @@
 
 -(void)updateStatus:(NSString*)message;
 
+-(void)updateIsLookup:(BOOL*)isLookup;
+
 -(void)loadConfig:(SquirrelConfig*)config
       forDarkMode:(BOOL)isDark;
 

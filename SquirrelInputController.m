@@ -532,8 +532,12 @@ const int N_KEY_ROLL_OVER = 50;
         ) {
       _inlineCandidate = true;
 //      _inlinePreedit = true;
+      // dr57：lookup，正常显示候选栏位置。
+      [NSApp.squirrelAppDelegate.panel updateIsLookup: false];
     } else {
       _inlineCandidate = false;
+      // dr57：lookup，正常显示候选栏位置。
+      [NSApp.squirrelAppDelegate.panel updateIsLookup: true];
     }
     
     if (_inlineCandidate) {
