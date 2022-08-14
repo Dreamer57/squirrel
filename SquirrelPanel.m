@@ -893,7 +893,7 @@ void fixDefaultFont(NSMutableAttributedString *text) {
   NSRect windowRect;
   // in vertical mode, the width and height are interchanged
   NSRect contentRect = _view.contentRect;
-  // dr57
+  // dr57：去除贴边，候选栏靠右贴边。
 //  if ((theme.vertical && NSMidY(_position) / NSHeight(_screenRect) < 0.5) ||
 //      (!theme.vertical && NSMinX(_position)+MAX(contentRect.size.width, _maxHeight)+theme.edgeInset.width*2 > NSMaxX(_screenRect))) {
 //    if (contentRect.size.width >= _maxHeight) {
@@ -922,19 +922,28 @@ void fixDefaultFont(NSMutableAttributedString *text) {
   } else {
     windowRect.size = NSMakeSize(contentRect.size.width + theme.edgeInset.width * 2,
                                  contentRect.size.height + theme.edgeInset.height * 2);
-    // dr57 候选框向前偏移
-    // kFirstLabelWidth 第一个 label 的长度
-    // theme.edgeInset.width 是 border_width 的长度：
-    // edgeInset = NSMakeSize(MAX(borderWidth, cornerRadius), MAX(borderHeight, cornerRadius));
-//    windowRect.origin = NSMakePoint(NSMinX(_position) - kFirstLabelWidth - theme.edgeInset.width,
-//                                    NSMinY(_position) - kOffsetHeight - NSHeight(windowRect));
-    
-    // dr57: fixed candidates location
-    windowRect.origin = NSMakePoint(
-                                    (_screenRect.origin.x + _screenRect.size.width * (CGFloat)0.45)
-                                    ,
-                                    (_screenRect.origin.y + _screenRect.size.height * (CGFloat)0.07)
-                                    );
+
+    // dr57 开关状态通知正常显示
+    if (_statusMessage) {
+      // dr57 候选框向前偏移
+      // kFirstLabelWidth 第一个 label 的长度
+      // theme.edgeInset.width 是 border_width 的长度：
+      // ：edgeInset = NSMakeSize(MAX(borderWidth, cornerRadius), MAX(borderHeight, cornerRadius));
+      // windowRect.origin = NSMakePoint(NSMinX(_position) - kFirstLabelWidth - theme.edgeInset.width,
+      //                                 NSMinY(_position) - kOffsetHeight - NSHeight(windowRect));
+
+      // dr57：原版效果
+      windowRect.origin = NSMakePoint(NSMinX(_position),
+                                      NSMinY(_position) - kOffsetHeight - NSHeight(windowRect));
+    } else {
+      // dr57: fixed candidates location
+      windowRect.origin = NSMakePoint(
+                                      (_screenRect.origin.x + _screenRect.size.width * (CGFloat)0.45)
+                                      ,
+                                      (_screenRect.origin.y + _screenRect.size.height * (CGFloat)0.07)
+                                      );
+    } // dr57
+
   }
 
   if (NSMaxX(windowRect) > NSMaxX(_screenRect)) {
