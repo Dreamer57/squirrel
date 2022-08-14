@@ -530,14 +530,23 @@ const int N_KEY_ROLL_OVER = 50;
         && raw_input[0] != '\\'
         && raw_input[0] != '\''
         ) {
+      // dr57：是否内嵌第一个候选。
       _inlineCandidate = true;
 //      _inlinePreedit = true;
       // dr57：lookup，正常显示候选栏位置。
       [NSApp.squirrelAppDelegate.panel updateIsLookup: false];
     } else {
-      _inlineCandidate = false;
       // dr57：lookup，正常显示候选栏位置。
-      [NSApp.squirrelAppDelegate.panel updateIsLookup: true];
+      // zz：！；zx：？。符号没必要显示，是种干扰。
+      if (raw_input[0] == 'z' && @(raw_input).length <= 2) {
+        // dr57：是否内嵌第一个候选。
+        _inlineCandidate = true;
+        [NSApp.squirrelAppDelegate.panel updateIsLookup: false];
+      } else {
+        // dr57：是否内嵌第一个候选。
+        _inlineCandidate = false;
+        [NSApp.squirrelAppDelegate.panel updateIsLookup: true];
+      }
     }
     
     if (_inlineCandidate) {
