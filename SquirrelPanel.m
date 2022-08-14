@@ -932,7 +932,7 @@ void fixDefaultFont(NSMutableAttributedString *text) {
       // windowRect.origin = NSMakePoint(NSMinX(_position) - kFirstLabelWidth - theme.edgeInset.width,
       //                                 NSMinY(_position) - kOffsetHeight - NSHeight(windowRect));
 
-      // dr57：原版效果
+      // dr57：开关状态通知正常显示。原版效果。
       windowRect.origin = NSMakePoint(NSMinX(_position),
                                       NSMinY(_position) - kOffsetHeight - NSHeight(windowRect));
     } else {
