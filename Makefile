@@ -14,8 +14,7 @@ RIME_LIB_DIR = librime/dist/lib
 RIME_LIBRARY_FILE_NAME = librime.1.dylib
 RIME_LIBRARY = lib/$(RIME_LIBRARY_FILE_NAME)
 
-RIME_DEPS = librime/lib/libcapnp.a \
-	librime/lib/libmarisa.a \
+RIME_DEPS = librime/lib/libmarisa.a \
 	librime/lib/libleveldb.a \
 	librime/lib/libopencc.a \
 	librime/lib/libyaml-cpp.a
@@ -106,7 +105,7 @@ archive: package
 
 sign-archive:
 	[ -n "${checksum}" ] || (echo >&2 'ERROR: $$checksum not specified.'; false)
-	bash package/make_archive
+	sign_key=sign/dsa_priv.pem bash package/make_archive
 
 DSTROOT = /Library/Input Methods
 SQUIRREL_APP_ROOT = $(DSTROOT)/Squirrel.app
