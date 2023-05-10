@@ -4,6 +4,7 @@
 #import "SquirrelConfig.h"
 #import "SquirrelPanel.h"
 #import "macos_keycode.h"
+#import "utf8.h"
 #import <rime_api.h>
 #import <rime/key_table.h>
 
@@ -79,53 +80,33 @@ const int N_KEY_ROLL_OVER = 50;
         }
         //NSLog(@"FLAGSCHANGED client: %@, modifiers: 0x%lx", sender, modifiers);
         int rime_modifiers = osx_modifiers_to_rime_modifiers(modifiers);
-        int rime_keycode = 0;
-        // For flags-changed event, keyCode is available since macOS 10.15 (#715)
-        Bool keyCodeAvailable = NO;
-        if (@available(macOS 10.15, *)) {
-          keyCodeAvailable = YES;
-          rime_keycode = osx_keycode_to_rime_keycode(event.keyCode, 0, 0, 0);
-          //NSLog(@"keyCode: %d", event.keyCode);
-        }
         int release_mask = 0;
         NSUInteger changes = _lastModifier ^ modifiers;
         if (changes & OSX_CAPITAL_MASK) {
-          if (!keyCodeAvailable) {
-            rime_keycode = XK_Caps_Lock;
-          }
           // NOTE: rime assumes XK_Caps_Lock to be sent before modifier changes,
           // while NSFlagsChanged event has the flag changed already.
           // so it is necessary to revert kLockMask.
           rime_modifiers ^= kLockMask;
-          [self processKey:rime_keycode modifiers:rime_modifiers];
+          [self processKey:XK_Caps_Lock modifiers:rime_modifiers];
         }
         if (changes & OSX_SHIFT_MASK) {
-          if (!keyCodeAvailable) {
-            rime_keycode = XK_Shift_L;
-          }
           release_mask = modifiers & OSX_SHIFT_MASK ? 0 : kReleaseMask;
-          [self processKey:rime_keycode modifiers:(rime_modifiers | release_mask)];
+          [self processKey:XK_Shift_L
+                 modifiers:(rime_modifiers | release_mask)];
         }
         if (changes & OSX_CTRL_MASK) {
-          if (!keyCodeAvailable) {
-            rime_keycode = XK_Control_L;
-          }
           release_mask = modifiers & OSX_CTRL_MASK ? 0 : kReleaseMask;
-          [self processKey:rime_keycode modifiers:(rime_modifiers | release_mask)];
+          [self processKey:XK_Control_L
+                 modifiers:(rime_modifiers | release_mask)];
         }
         if (changes & OSX_ALT_MASK) {
-          if (!keyCodeAvailable) {
-            rime_keycode = XK_Alt_L;
-          }
           release_mask = modifiers & OSX_ALT_MASK ? 0 : kReleaseMask;
-          [self processKey:rime_keycode modifiers:(rime_modifiers | release_mask)];
+          [self processKey:XK_Alt_L modifiers:(rime_modifiers | release_mask)];
         }
         if (changes & OSX_COMMAND_MASK) {
-          if (!keyCodeAvailable) {
-            rime_keycode = XK_Super_L;
-          }
           release_mask = modifiers & OSX_COMMAND_MASK ? 0 : kReleaseMask;
-          [self processKey:rime_keycode modifiers:(rime_modifiers | release_mask)];
+          [self processKey:XK_Super_L
+                 modifiers:(rime_modifiers | release_mask)];
           // do not update UI when using Command key
 //          break;  // dr57
         }
@@ -153,6 +134,9 @@ const int N_KEY_ROLL_OVER = 50;
           handled = [self processKey:rime_keycode modifiers:rime_modifiers];
           [self rimeUpdate];
         }
+      } break;
+      case NSEventTypeLeftMouseDown: {
+        [self commitComposition:_currentClient];
       } break;
       default:
         break;
@@ -215,27 +199,6 @@ const int N_KEY_ROLL_OVER = 50;
     }
   }
 
-  return handled;
-}
-
-- (BOOL)selectCandidate:(NSInteger)index {
-  BOOL success = rime_get_api()->select_candidate_on_current_page(_session, (int) index);
-  if (success) {
-    [self rimeUpdate];
-  }
-  return success;
-}
-
-- (BOOL)pageUp:(BOOL)up {
-  BOOL handled = NO;
-  if (up) {
-    handled = rime_get_api()->change_page(_session, True);
-  } else {
-    handled = rime_get_api()->change_page(_session, False);
-  }
-  if (handled) {
-    [self rimeUpdate];
-  }
   return handled;
 }
 
@@ -302,22 +265,14 @@ const int N_KEY_ROLL_OVER = 50;
 -(NSUInteger)recognizedEvents:(id)sender
 {
   //NSLog(@"recognizedEvents:");
-  return NSEventMaskKeyDown | NSEventMaskFlagsChanged;
+  return NSEventMaskKeyDown | NSEventMaskFlagsChanged | NSEventMaskLeftMouseDown;
 }
 
 -(void)activateServer:(id)sender
 {
   //NSLog(@"activateServer:");
-  NSString *keyboardLayout = [NSApp.squirrelAppDelegate.config getString:@"keyboard_layout"];
-  if ([keyboardLayout isEqualToString:@"last"] || [keyboardLayout isEqualToString:@""]) {
-    keyboardLayout = NULL;
-  } else if ([keyboardLayout isEqualToString:@"default"]) {
-    keyboardLayout = @"com.apple.keylayout.ABC";
-  } else if (![keyboardLayout hasPrefix:@"com.apple.keylayout."]) {
-    keyboardLayout = [NSString stringWithFormat:@"com.apple.keylayout.%@", keyboardLayout];
-  }
-  if (keyboardLayout) {
-    [sender overrideKeyboardWithKeyboardNamed:keyboardLayout];
+  if ([NSApp.squirrelAppDelegate.config getBool:@"us_keyboard_layout"]) {
+    [sender overrideKeyboardWithKeyboardNamed:@"com.apple.keylayout.US"];
   }
   _preeditString = @"";
 }
@@ -466,15 +421,13 @@ const int N_KEY_ROLL_OVER = 50;
   [_currentClient attributesForCharacterIndex:0 lineHeightRectangle:&inputPos];
   SquirrelPanel* panel = NSApp.squirrelAppDelegate.panel;
   panel.position = inputPos;
-  panel.inputController = self;
   [panel showPreedit:preedit
             selRange:selRange
             caretPos:caretPos
           candidates:candidates
             comments:comments
               labels:labels
-         highlighted:index
-              update:YES];
+         highlighted:index];
 }
 
 @end // SquirrelController
@@ -531,13 +484,6 @@ const int N_KEY_ROLL_OVER = 50;
   }
 }
 
-NSString *substr(const char *str, int length) {
-  char substring[length+1];
-  strncpy(substring, str, length);
-  substring[length] = '\0';
-  return [NSString stringWithCString:substring encoding:NSUTF8StringEncoding];
-}
-
 -(void)rimeUpdate
 {
   //NSLog(@"rimeUpdate");
@@ -553,8 +499,7 @@ NSString *substr(const char *str, int length) {
       _inlinePreedit = (NSApp.squirrelAppDelegate.panel.inlinePreedit &&
                         !rime_get_api()->get_option(_session, "no_inline")) ||
                       rime_get_api()->get_option(_session, "inline");
-      _inlineCandidate = (NSApp.squirrelAppDelegate.panel.inlineCandidate &&
-                          !rime_get_api()->get_option(_session, "no_inline"));
+      _inlineCandidate = NSApp.squirrelAppDelegate.panel.inlineCandidate;
       // if not inline, embed soft cursor in preedit string
       rime_get_api()->set_option(_session, "soft_cursor", !_inlinePreedit);
     }
@@ -570,9 +515,9 @@ NSString *substr(const char *str, int length) {
     const char *preedit = ctx.composition.preedit;
     NSString *preeditText = preedit ? @(preedit) : @"";
 
-    NSUInteger start = substr(preedit, ctx.composition.sel_start).length;
-    NSUInteger end = substr(preedit, ctx.composition.sel_end).length;
-    NSUInteger caretPos = substr(preedit, ctx.composition.cursor_pos).length;
+    NSUInteger start = utf8len(preedit, ctx.composition.sel_start);
+    NSUInteger end = utf8len(preedit, ctx.composition.sel_end);
+    NSUInteger caretPos = utf8len(preedit, ctx.composition.cursor_pos);
     NSRange selRange = NSMakeRange(start, end - start);
     // dr57
     if (raw_input[0] != 'z'

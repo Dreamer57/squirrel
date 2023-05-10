@@ -909,6 +909,8 @@ void removeCorner(NSMutableArray<NSValue *> *highlightedPoints, NSMutableSet<NSN
 
   NSString *_statusMessage;
   NSTimer *_statusTimer;
+  
+  NSString *_preedit;
   NSRange _selRange;
   NSUInteger _caretPos;
   NSArray *_candidates;
@@ -918,6 +920,8 @@ void removeCorner(NSMutableArray<NSValue *> *highlightedPoints, NSMutableSet<NSN
   NSUInteger _cursorIndex;
   NSPoint _scrollDirection;
   NSDate *_scrollTime;
+  
+  BOOL *_isLookup;  // dr57
 }
 
 - (BOOL)linear {
@@ -1172,15 +1176,17 @@ NSAttributedString *insert(NSString *separator, NSAttributedString *betweenText)
   // in vertical mode, the width and height are interchanged
   NSRect contentRect = _view.contentRect;
   // dr57：去除贴边，候选栏靠右贴边。
-  if ((theme.vertical && NSMidY(_position) / NSHeight(_screenRect) < 0.5) ||
-      (!theme.vertical && NSMinX(_position)+MAX(contentRect.size.width, _maxHeight)+theme.edgeInset.width*2 > NSMaxX(_screenRect))) {
-//    if (contentRect.size.width >= _maxHeight) {
-//      _maxHeight = contentRect.size.width;
-//    } else {
-//      contentRect.size.width = _maxHeight;
-      _view.text.layoutManagers[0].textContainers[0].containerSize = NSMakeSize(_maxHeight, 0);
-//    }
-//  }
+  // 2023年05月10日 周三 深夜 十一点：已更新，我原本的更改就是注释了，现在加了个开关，可以注释取消了，现在我是一点没改，上一行的注释已可删除。
+  if (theme.memorizeSize && ((theme.vertical && NSMidY(_position) / NSHeight(_screenRect) < 0.5) ||
+      (!theme.vertical && NSMinX(_position)+MAX(contentRect.size.width, _maxHeight)+theme.edgeInset.width*2 > NSMaxX(_screenRect)))) {
+    if (contentRect.size.width >= _maxHeight) {
+      _maxHeight = contentRect.size.width;
+    } else {
+      contentRect.size.width = _maxHeight;
+      _view.textView.textContainer.containerSize = NSMakeSize(_maxHeight, maxTextHeight);
+    }
+  }
+
 
   if (theme.vertical) {
     windowRect.size = NSMakeSize(contentRect.size.height + theme.edgeInset.height * 2,
