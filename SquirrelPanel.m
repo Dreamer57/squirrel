@@ -24,6 +24,14 @@ static CGFloat kFirstLabelWidth = 15;
 @property(nonatomic, strong, readonly) NSColor *preeditBackgroundColor;
 @property(nonatomic, strong, readonly) NSColor *borderColor;
 
+// dr57
+@property(nonatomic, readonly) CGFloat marginX;
+@property(nonatomic, readonly) CGFloat marginY;
+@property(nonatomic, readonly) CGFloat paddingX;
+@property(nonatomic, readonly) CGFloat paddingY;
+@property(nonatomic, strong, readonly) NSString *candidateGap;
+// dr57 end
+
 @property(nonatomic, readonly) CGFloat cornerRadius;
 @property(nonatomic, readonly) CGFloat hilitedCornerRadius;
 @property(nonatomic, readonly) CGFloat surroundingExtraExpansion;
@@ -91,6 +99,14 @@ static CGFloat kFirstLabelWidth = 15;
 
 - (void) setParagraphStyle:(NSParagraphStyle *)paragraphStyle
      preeditParagraphStyle:(NSParagraphStyle *)preeditParagraphStyle;
+
+// dr57
+- (void) setDr57Settings:(CGFloat)marginX
+                 marginY:(CGFloat)marginY
+                 paddingX:(CGFloat)paddingX
+                 paddingY:(CGFloat)paddingY
+            candidateGap:(NSString *)candidateGap;
+// dr57 end
 
 @end
 
@@ -200,6 +216,20 @@ static CGFloat kFirstLabelWidth = 15;
   _preeditParagraphStyle = preeditParagraphStyle;
 }
 
+// dr57
+- (void)setDr57Settings:(CGFloat)marginX
+                marginY:(CGFloat)marginY
+                paddingX:(CGFloat)paddingX
+                paddingY:(CGFloat)paddingY
+           candidateGap:(NSString *)candidateGap{
+  _marginX  = marginX;
+  _marginY  = marginY;
+  _paddingX = paddingX;
+  _paddingY = paddingY;
+  _candidateGap = candidateGap;
+}
+// dr57 end
+
 @end
 
 @interface SquirrelView : NSView
@@ -292,6 +322,11 @@ SquirrelTheme *_darkTheme;
   for (NSUInteger i = 0; i < ranges.count; i += 1) {
     NSRange range = [ranges[i] rangeValue];
     NSRect rect = [self contentRectForRange:[self convertRange: range]];
+//    // dr57 这里是所有字组成的最终矩形，空间加到了最后面。
+////    expandHighlightWidth(&rect, 30.0);
+//    rect.size.width += 50.0;
+//    rect.origin.x -= 25.0;
+//    // dr57 end
     x0 = MIN(NSMinX(rect), x0);
     x1 = MAX(NSMaxX(rect), x1);
     y0 = MIN(NSMinY(rect), y0);
@@ -625,11 +660,31 @@ void removeCorner(NSMutableArray<NSValue *> *highlightedPoints, NSMutableSet<NSN
   }
   innerBox.size.height -= theme.linespace;
   innerBox.origin.y += halfLinespace;
+  
+//  // dr57 margin
+//  innerBox.size.height -= theme.margin;
+//  innerBox.origin.y += theme.margin / 2;
+//  innerBox.size.width -= theme.margin;
+//  innerBox.origin.x += theme.margin / 2;
+//  // dr57 end
+  
   NSRect outerBox = backgroundRect;
   outerBox.size.height -= preeditRect.size.height + MAX(0, theme.hilitedCornerRadius + theme.borderWidth) - 2 * extraExpansion;
   outerBox.size.width -= MAX(0, theme.hilitedCornerRadius + theme.borderWidth) - 2 * extraExpansion;
   outerBox.origin.x += MAX(0, theme.hilitedCornerRadius + theme.borderWidth) / 2 - extraExpansion;
   outerBox.origin.y += preeditRect.size.height + MAX(0, theme.hilitedCornerRadius + theme.borderWidth) / 2 - extraExpansion;
+  
+  // dr57 margin
+  outerBox.size.height -= theme.marginY * 2;
+  outerBox.origin.y += theme.marginY;
+  outerBox.size.width -= theme.marginX * 2;
+  outerBox.origin.x += theme.marginX;
+  
+//  // dr57 gap
+//  outerBox.origin.x += theme.margin;
+//  backgroundRect.size.width += 50.0;
+//  backgroundRect.origin.x -= 25.0;
+  // dr57 end
   
   double effectiveRadius = MAX(0, theme.hilitedCornerRadius + 2 * extraExpansion / theme.hilitedCornerRadius * MAX(0, theme.cornerRadius - theme.hilitedCornerRadius));
   CGMutablePathRef path = CGPathCreateMutable();
@@ -638,6 +693,8 @@ void removeCorner(NSMutableArray<NSValue *> *highlightedPoints, NSMutableSet<NSN
     NSRect leadingRect;
     NSRect bodyRect;
     NSRect trailingRect;
+    // dr57 注释：extraSurounding _seperatorWidth
+    // dr57 注释 end
     [self multilineRectForRange:[self convertRange:highlightedRange] leadingRect:&leadingRect bodyRect:&bodyRect trailingRect:&trailingRect extraSurounding:_seperatorWidth bounds:outerBox];
     
     NSMutableArray<NSValue *> *highlightedPoints;
@@ -741,6 +798,8 @@ void removeCorner(NSMutableArray<NSValue *> *highlightedPoints, NSMutableSet<NSN
         highlightedPath = [self drawHighlightedWith:theme highlightedRange:candidateRange backgroundRect:backgroundRect preeditRect:preeditRect containingRect:containingRect extraExpansion:0];
       }
     } else {
+      // dr57 注释：好像从来不执行这里。
+      // dr57 注释 end
       // Draw other highlighted Rect
       if (candidateRange.length > 0 && theme.candidateBackColor != nil) {
         CGPathRef candidatePath = [self drawHighlightedWith:theme highlightedRange:candidateRange backgroundRect:backgroundRect preeditRect:preeditRect containingRect:containingRect extraExpansion:theme.surroundingExtraExpansion];
@@ -1176,7 +1235,7 @@ NSAttributedString *insert(NSString *separator, NSAttributedString *betweenText)
   // in vertical mode, the width and height are interchanged
   NSRect contentRect = _view.contentRect;
   // dr57：去除贴边，候选栏靠右贴边。
-  // 2023年05月10日 周三 深夜 十一点：已更新，我原本的更改就是注释了，现在加了个开关，可以注释取消了，现在我是一点没改，上一行的注释已可删除。
+  // 2023年05月10日 周三 深夜 十一点：已更新，我原本的更改就是注释了，现在加了个开关，可以注释取消了，现在我是一点没改，上一行的注释已可删除。style/memorize_size: true/false
   if (theme.memorizeSize && ((theme.vertical && NSMidY(_position) / NSHeight(_screenRect) < 0.5) ||
       (!theme.vertical && NSMinX(_position)+MAX(contentRect.size.width, _maxHeight)+theme.edgeInset.width*2 > NSMaxX(_screenRect)))) {
     if (contentRect.size.width >= _maxHeight) {
@@ -1228,7 +1287,7 @@ NSAttributedString *insert(NSString *separator, NSAttributedString *betweenText)
                                       ,
                                       (_screenRect.origin.y + _screenRect.size.height * (CGFloat)0.07)
                                       );
-    } // dr57
+    } // dr57 end
 
   }
 
@@ -1378,7 +1437,7 @@ NSAttributedString *insert(NSString *separator, NSAttributedString *betweenText)
   // candidates
   NSUInteger i;
   for (i = 0; i < candidates.count; ++i) {
-    //    Dr57修改
+    //    Dr57 修改
     // if (i == 0) {
     //   continue;
     // } else if (i >= 3) {
@@ -1428,7 +1487,7 @@ NSAttributedString *insert(NSString *separator, NSAttributedString *betweenText)
         }
         labelWidth = [str boundingRectWithSize:NSZeroSize options:NSStringDrawingUsesLineFragmentOrigin].size.width;
       }
-      // Dr57修改
+      // Dr57 修改
       if (i == 0) {
         kFirstLabelWidth = [line boundingRectWithSize:NSZeroSize options:NSStringDrawingUsesLineFragmentOrigin].size.width;
       }
@@ -1520,6 +1579,14 @@ NSAttributedString *insert(NSString *separator, NSAttributedString *betweenText)
                  value:paragraphStyleCandidate
                  range:NSMakeRange(0, line.length)];
 
+    // dr57 candidate gap
+    if (i > 0) {
+      [text appendAttributedString:[[NSAttributedString alloc]
+                                    initWithString:theme.candidateGap
+                                    attributes:attrs]];
+    }
+    // dr57 end
+    
     NSRange candidateRange = NSMakeRange(text.length, line.length);
     [candidateRanges addObject: [NSValue valueWithRange:candidateRange]];
     [text appendAttributedString:line];
@@ -1698,6 +1765,14 @@ static void updateTextOrientation(BOOL *isVerticalText, SquirrelConfig *config, 
   CGFloat spacing = [config getDouble:@"style/spacing"];
   CGFloat baseOffset = [config getDouble:@"style/base_offset"];
   CGFloat shadowSize = fmax(0,[config getDouble:@"style/shadow_size"]);
+  
+  // dr57
+  CGFloat marginX = [config getDouble:@"style/margin_x"];
+  CGFloat marginY = [config getDouble:@"style/margin_y"];
+  CGFloat paddingX = [config getDouble:@"style/padding_x"];
+  CGFloat paddingY = [config getDouble:@"style/padding_y"];
+  NSString *candidateGap = [config getString:@"style/candidate_gap"];
+  // dr57 end
 
   NSColor *backgroundColor;
   NSColor *borderColor;
@@ -1842,6 +1917,33 @@ static void updateTextOrientation(BOOL *isVerticalText, SquirrelConfig *config, 
     if (cornerRadiusOverridden) {
       cornerRadius = cornerRadiusOverridden.doubleValue;
     }
+    // dr57
+    NSNumber *marginXOverridden =
+        [config getOptionalDouble:[prefix stringByAppendingString:@"/margin_x"]];
+    if (marginXOverridden) {
+      marginX = marginXOverridden.doubleValue;
+    }
+    NSNumber *marginYOverridden =
+        [config getOptionalDouble:[prefix stringByAppendingString:@"/margin_y"]];
+    if (marginYOverridden) {
+      marginY = marginYOverridden.doubleValue;
+    }
+    NSNumber *paddingXOverridden =
+        [config getOptionalDouble:[prefix stringByAppendingString:@"/padding_x"]];
+    if (paddingXOverridden) {
+      paddingX = paddingXOverridden.doubleValue;
+    }
+    NSNumber *paddingYOverridden =
+        [config getOptionalDouble:[prefix stringByAppendingString:@"/padding_y"]];
+    if (paddingYOverridden) {
+      paddingY = paddingYOverridden.doubleValue;
+    }
+    NSString *candidateGapOverridden =
+        [config getString:[prefix stringByAppendingString:@"/candidate_gap"]];
+    if (candidateGapOverridden) {
+      candidateGap = candidateGapOverridden;
+    }
+    // dr57 end
     NSNumber *hilitedCornerRadiusOverridden =
         [config getOptionalDouble:[prefix stringByAppendingString:@"/hilited_corner_radius"]];
     if (hilitedCornerRadiusOverridden) {
@@ -2026,7 +2128,11 @@ static void updateTextOrientation(BOOL *isVerticalText, SquirrelConfig *config, 
   if (vertical) {
     edgeInset = NSMakeSize(borderHeight + cornerRadius, borderWidth + cornerRadius);
   } else {
-    edgeInset = NSMakeSize(borderWidth + cornerRadius, borderHeight + cornerRadius);
+    // dr57 修改corner_radius影响高度 begin
+//    edgeInset = NSMakeSize(borderWidth + cornerRadius, borderHeight + cornerRadius);
+    // dr57 padding
+    edgeInset = NSMakeSize(borderWidth + paddingX * 2 , borderHeight + paddingY * 2);
+    // dr57 end
   }
 
   [theme setCornerRadius:cornerRadius
@@ -2047,5 +2153,9 @@ static void updateTextOrientation(BOOL *isVerticalText, SquirrelConfig *config, 
 
   theme.native = isNative;
   theme.candidateFormat = (candidateFormat ? candidateFormat : kDefaultCandidateFormat);
+  
+  // dr57
+  [theme setDr57Settings:marginX marginY:marginY paddingX:paddingX paddingY:paddingY candidateGap:candidateGap];
+  // dr57 end
 }
 @end
