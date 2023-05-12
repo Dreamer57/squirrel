@@ -32,7 +32,10 @@
 
 -(void)updateStatusLong:(NSString*)messageLong statusShort:(NSString*)messageShort;
 
+// dr57
 -(void)updateIsLookup:(BOOL*)isLookup;
+-(void)updateFont:(BOOL)isBig;
+// dr57 end
 
 -(void)loadConfig:(SquirrelConfig*)config
       forDarkMode:(BOOL)isDark;

@@ -11,6 +11,9 @@ static NSString *const kDefaultCandidateFormat = @"%c.\u00A0%@";
 
 // dr57
 static CGFloat kFirstLabelWidth = 15;
+static const NSFont *standardFont;
+static const NSFont *bigFont;
+// dr57
 
 @interface SquirrelTheme : NSObject
 
@@ -33,6 +36,8 @@ static CGFloat kFirstLabelWidth = 15;
 @property(nonatomic, assign) BOOL fixedCandidateBox;
 @property(nonatomic, assign) CGFloat fixedCandidateBoxXPercentage;
 @property(nonatomic, assign) CGFloat fixedCandidateBoxYPercentage;
+@property(nonatomic, assign) CGFloat bigFontBaseOffset;
+@property(nonatomic, assign) CGFloat baseOffset;
 // dr57 end
 
 @property(nonatomic, readonly) CGFloat cornerRadius;
@@ -1631,9 +1636,32 @@ NSAttributedString *insert(NSString *separator, NSAttributedString *betweenText)
   }
 }
 
+// dr57
 - (void)updateIsLookup:(BOOL *)isLookup {
   _isLookup = isLookup;
 }
+// dr57 end
+
+// dr57
+- (void)updateFont:(BOOL)isBig {
+  SquirrelTheme *theme = _view.currentTheme;
+  NSMutableDictionary *attrs = theme.attrs;
+  NSMutableDictionary *highlightedAttrs = theme.highlightedAttrs;
+  const NSFont *font;
+  CGFloat baseOffset;
+  if (isBig) {
+    font = bigFont;
+    baseOffset = theme.bigFontBaseOffset;
+  } else {
+    font = standardFont;
+    baseOffset = theme.baseOffset;
+  }
+  attrs[NSFontAttributeName] = font;
+  highlightedAttrs[NSFontAttributeName] = font;
+  attrs[NSBaselineOffsetAttributeName] = @(baseOffset);
+  highlightedAttrs[NSBaselineOffsetAttributeName] = @(baseOffset);
+}
+// dr57 end
 
 - (void)showStatus:(NSString *)message {
   SquirrelTheme *theme = _view.currentTheme;
@@ -1781,6 +1809,8 @@ static void updateTextOrientation(BOOL *isVerticalText, SquirrelConfig *config, 
   CGFloat paddingX = [config getDouble:@"style/padding_x"];
   CGFloat paddingY = [config getDouble:@"style/padding_y"];
   NSString *candidateGap = [config getString:@"style/candidate_gap"];
+  NSString *bigFontName;
+  CGFloat bigFontSize;
   // dr57 end
 
   NSColor *backgroundColor;
@@ -1955,6 +1985,11 @@ static void updateTextOrientation(BOOL *isVerticalText, SquirrelConfig *config, 
     theme.fixedCandidateBox = [config getBool:[prefix stringByAppendingString:@"/fixed_candidate_box"]];
     theme.fixedCandidateBoxXPercentage = [config getDouble:[prefix stringByAppendingString:@"/fixed_candidate_box_x_percentage"]];
     theme.fixedCandidateBoxYPercentage = [config getDouble:[prefix stringByAppendingString:@"/fixed_candidate_box_y_percentage"]];
+    bigFontName =
+        [config getString:[prefix stringByAppendingString:@"/big_font_face"]];
+    bigFontSize =
+        [config getDouble:[prefix stringByAppendingString:@"/big_font_point"]];
+    theme.bigFontBaseOffset = [config getDouble:[prefix stringByAppendingString:@"/big_font_base_offset"]];
     // dr57 end
     NSNumber *hilitedCornerRadiusOverridden =
         [config getOptionalDouble:[prefix stringByAppendingString:@"/hilited_corner_radius"]];
@@ -2019,6 +2054,26 @@ static void updateTextOrientation(BOOL *isVerticalText, SquirrelConfig *config, 
     // use default font
     font = [NSFont userFontOfSize:fontSize];
   }
+  // dr57 bigFont
+  theme.baseOffset = baseOffset;
+  if (!theme.bigFontBaseOffset) {
+    theme.bigFontBaseOffset = bigFontSize * 0.4;
+  }
+  NSFontDescriptor *bigFontXDescriptor = nil;
+  NSFont *bigFontX = nil;
+  if (fontName != nil) {
+    bigFontXDescriptor = getFontDescriptor(bigFontName);
+    if (bigFontXDescriptor != nil) {
+      bigFontX = [NSFont fontWithDescriptor:bigFontXDescriptor size:bigFontSize];
+    }
+  }
+  if (bigFontX == nil) {
+    // use default font
+    bigFontX = [NSFont userFontOfSize:bigFontSize];
+  }
+  standardFont = font;
+  bigFont = bigFontX;
+  // dr57 bigFont end
   NSFontDescriptor *labelFontDescriptor = nil;
   NSFont *labelFont = nil;
   if (labelFontName != nil) {

@@ -614,6 +614,13 @@ NSString *substr(const char *str, int length) {
           [NSApp.squirrelAppDelegate.panel updateIsLookup: true];
         }
       }
+      // dr57 bigFont
+      if (raw_input[0] == '\'') {
+        [NSApp.squirrelAppDelegate.panel updateFont:true];
+      } else {
+        [NSApp.squirrelAppDelegate.panel updateFont:false];
+      }
+      // dr57 bigFont end
     }
     
     if (_inlineCandidate) {
