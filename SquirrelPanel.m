@@ -30,6 +30,9 @@ static CGFloat kFirstLabelWidth = 15;
 @property(nonatomic, readonly) CGFloat paddingX;
 @property(nonatomic, readonly) CGFloat paddingY;
 @property(nonatomic, strong, readonly) NSString *candidateGap;
+@property(nonatomic, assign) BOOL fixedCandidateBox;
+@property(nonatomic, assign) CGFloat fixedCandidateBoxXPercentage;
+@property(nonatomic, assign) CGFloat fixedCandidateBoxYPercentage;
 // dr57 end
 
 @property(nonatomic, readonly) CGFloat cornerRadius;
@@ -1271,7 +1274,7 @@ NSAttributedString *insert(NSString *separator, NSAttributedString *betweenText)
       // dr57：开关状态通知正常显示。原版效果。
       windowRect.origin = NSMakePoint(NSMinX(_position),
                                       NSMinY(_position) - kOffsetHeight - NSHeight(windowRect));
-    } else if (_isLookup) {
+    } else if (!theme.fixedCandidateBox || _isLookup) {
       // dr57：lookup时。
       // dr57 候选框向前偏移
       // kFirstLabelWidth 第一个 label 的长度
@@ -1280,13 +1283,19 @@ NSAttributedString *insert(NSString *separator, NSAttributedString *betweenText)
       windowRect.origin = NSMakePoint(NSMinX(_position) - kFirstLabelWidth - theme.edgeInset.width,
                                       NSMinY(_position) - kOffsetHeight - NSHeight(windowRect));
     }
-    else {
+    else if (theme.fixedCandidateBox) {
       // dr57: fixed candidates location
+//      windowRect.origin = NSMakePoint(
+//                                      (_screenRect.origin.x + _screenRect.size.width * (CGFloat)0.45)
+//                                      ,
+//                                      (_screenRect.origin.y + _screenRect.size.height * (CGFloat)0.07)
+//                                      );
+      // 改成读配置，与上面效果一样。
       windowRect.origin = NSMakePoint(
-                                      (_screenRect.origin.x + _screenRect.size.width * (CGFloat)0.45)
-                                      ,
-                                      (_screenRect.origin.y + _screenRect.size.height * (CGFloat)0.07)
-                                      );
+        (_screenRect.origin.x + _screenRect.size.width * theme.fixedCandidateBoxXPercentage)
+        ,
+        (_screenRect.origin.y + _screenRect.size.height * theme.fixedCandidateBoxYPercentage)
+        );
     } // dr57 end
 
   }
@@ -1943,6 +1952,9 @@ static void updateTextOrientation(BOOL *isVerticalText, SquirrelConfig *config, 
     if (candidateGapOverridden) {
       candidateGap = candidateGapOverridden;
     }
+    theme.fixedCandidateBox = [config getBool:[prefix stringByAppendingString:@"/fixed_candidate_box"]];
+    theme.fixedCandidateBoxXPercentage = [config getDouble:[prefix stringByAppendingString:@"/fixed_candidate_box_x_percentage"]];
+    theme.fixedCandidateBoxYPercentage = [config getDouble:[prefix stringByAppendingString:@"/fixed_candidate_box_y_percentage"]];
     // dr57 end
     NSNumber *hilitedCornerRadiusOverridden =
         [config getOptionalDouble:[prefix stringByAppendingString:@"/hilited_corner_radius"]];

@@ -575,32 +575,44 @@ NSString *substr(const char *str, int length) {
     NSUInteger caretPos = substr(preedit, ctx.composition.cursor_pos).length;
     NSRange selRange = NSMakeRange(start, end - start);
     // dr57
-    if (raw_input[0] != 'z'
-        && raw_input[0] != '`'
-        && raw_input[0] != '-'
-        && raw_input[0] != '='
-        && raw_input[0] != '0'
-        && raw_input[0] != '['
-        && raw_input[0] != ']'
-        && raw_input[0] != '\\'
-        && raw_input[0] != '\''
-        ) {
-      // dr57：是否内嵌第一个候选。
-      _inlineCandidate = true;
-//      _inlinePreedit = true;
-      // dr57：lookup，正常显示候选栏位置。
-      [NSApp.squirrelAppDelegate.panel updateIsLookup: false];
-    } else {
-      // dr57：lookup，正常显示候选栏位置。
-      // zz：！；zx：？。符号没必要显示，是种干扰。
-      if (raw_input[0] == 'z' && @(raw_input).length <= 2) {
+    const char *schemaId = _schemaId.UTF8String;
+//    NSString *schemaId = _schemaId;
+//    [NSApp.squirrelAppDelegate.config getString:@"schema/schema_id"];
+//    NSApp.squirrelAppDelegate.config.schemaId;
+    // 从不读 RimeConfig
+    const char *dr57 = "wubi86_dr57";
+    const BOOL originalInlineCandidate = _inlineCandidate;
+    
+    if (_inlineCandidate
+        && strcmp(schemaId, dr57) == 0) {
+    
+      if (raw_input[0] != 'z'
+          && raw_input[0] != '`'
+          && raw_input[0] != '-'
+          && raw_input[0] != '='
+          && raw_input[0] != '0'
+          && raw_input[0] != '['
+          && raw_input[0] != ']'
+          && raw_input[0] != '\\'
+          && raw_input[0] != '\''
+          ) {
         // dr57：是否内嵌第一个候选。
         _inlineCandidate = true;
+  //      _inlinePreedit = true;
+        // dr57：lookup，正常显示候选栏位置。
         [NSApp.squirrelAppDelegate.panel updateIsLookup: false];
       } else {
-        // dr57：是否内嵌第一个候选。
-        _inlineCandidate = false;
-        [NSApp.squirrelAppDelegate.panel updateIsLookup: true];
+        // dr57：lookup，正常显示候选栏位置。
+        // zz：！；zx：？。符号没必要显示，是种干扰。
+        if (raw_input[0] == 'z' && @(raw_input).length <= 2) {
+          // dr57：是否内嵌第一个候选。
+          _inlineCandidate = true;
+          [NSApp.squirrelAppDelegate.panel updateIsLookup: false];
+        } else {
+          // dr57：是否内嵌第一个候选。
+          _inlineCandidate = false;
+          [NSApp.squirrelAppDelegate.panel updateIsLookup: true];
+        }
       }
     }
     
@@ -633,6 +645,8 @@ NSString *substr(const char *str, int length) {
     }
     
     // dr57
+    // 复原
+    _inlineCandidate = originalInlineCandidate;
     // 开关：隐藏候选栏。
     // 开关打开了，并且有候选项时隐藏候选栏。正常显示开关通知消息。
     RIME_STRUCT(RimeStatus, status);
@@ -671,6 +685,8 @@ NSString *substr(const char *str, int length) {
     NSUInteger i;
     for (i = 0; i < ctx.menu.num_candidates; ++i) {
       [candidates addObject:@(ctx.menu.candidates[i].text)];
+      // dr57 调试，输出
+//      [candidates addObject:@(_inlineCandidate? "true" : "false")];
       if (ctx.menu.candidates[i].comment) {
         [comments addObject:@(ctx.menu.candidates[i].comment)];
       }
