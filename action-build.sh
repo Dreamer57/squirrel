@@ -10,7 +10,7 @@ export BUILD_UNIVERSAL=1
 ./action-install.sh
 
 # build dependencies
-make deps
+# make deps
 
 # build Squirrel
 make MACOSX_DEPLOYMENT_TARGET='13.0' "${target}"
