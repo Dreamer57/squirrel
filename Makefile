@@ -4,8 +4,8 @@ all: release
 install: install-release
 
 # Change to `xcode/dist-with-icu` if boost is linked to icu libraries.
-# RIME_DIST_TARGET = xcode/dist
-RIME_DIST_TARGET = xcode/dist-with-icu
+RIME_DIST_TARGET = xcode/dist
+# RIME_DIST_TARGET = xcode/dist-with-icu	# 压根就没用到icu……
 # RIME_DIST_TARGET = xcode/debug-with-icu-dist
 
 RIME_BIN_DIR = librime/dist/bin
