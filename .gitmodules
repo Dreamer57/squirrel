@@ -1,6 +1,6 @@
 [submodule "librime"]
 	path = librime
-	url = https://github.com/dreamer57/librime.git
+	url = https://github.com/Dreamer57/librime.git
 	ignore = dirty
 [submodule "plum"]
 	path = plum
