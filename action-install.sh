@@ -2,17 +2,18 @@
 
 set -e
 
-rime_version=1.8.5
-# rime_git_hash=08dd95f
-rime_git_hash=140a01d
+rime_version=latest
+rime_git_hash=24f0f7b
+sparkle_version=2.6.2
 
-rime_archive="rime-${rime_git_hash}-macOS.tar.bz2"
-# rime_download_url="https://github.com/rime/librime/releases/download/${rime_version}/${rime_archive}"
-rime_download_url="https://github.com/dreamer57/librime/releases/download/${rime_version}/${rime_archive}"
+rime_archive="rime-${rime_git_hash}-macOS-universal.tar.bz2"
+rime_download_url="https://github.com/rime/librime/releases/download/${rime_version}/${rime_archive}"
 
-rime_deps_archive="rime-deps-${rime_git_hash}-macOS.tar.bz2"
-# rime_deps_download_url="https://github.com/rime/librime/releases/download/${rime_version}/${rime_deps_archive}"
-rime_deps_download_url="https://github.com/dreamer57/librime/releases/download/${rime_version}/${rime_deps_archive}"
+rime_deps_archive="rime-deps-${rime_git_hash}-macOS-universal.tar.bz2"
+rime_deps_download_url="https://github.com/rime/librime/releases/download/${rime_version}/${rime_deps_archive}"
+
+sparkle_archive="Sparkle-${sparkle_version}.tar.xz"
+sparkle_download_url="https://github.com/sparkle-project/Sparkle/releases/download/${sparkle_version}/${sparkle_archive}"
 
 mkdir -p download && (
     cd download
@@ -20,11 +21,15 @@ mkdir -p download && (
     tar --bzip2 -xf "${rime_archive}"
     [ -z "${no_download}" ] && curl -LO "${rime_deps_download_url}"
     tar --bzip2 -xf "${rime_deps_archive}"
+    [ -z "${no_download}" ] && curl -LO "${sparkle_download_url}"
+    tar -xJf "${sparkle_archive}"
 )
 
 mkdir -p librime/share
+mkdir -p Frameworks
 cp -R download/dist librime/
 cp -R download/share/opencc librime/share/
+cp -R download/Sparkle.framework Frameworks/
 
 # skip building librime and opencc-data; use downloaded artifacts
 make copy-rime-binaries copy-opencc-data

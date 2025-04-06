@@ -11,7 +11,7 @@
 【鼠鬚管】輸入法
 ===
 [![Download](https://img.shields.io/github/v/release/rime/squirrel)](https://github.com/rime/squirrel/releases/latest)
-[![Build Status](https://travis-ci.org/rime/squirrel.svg)](https://travis-ci.org/rime/squirrel)
+[![Build Status](https://github.com/rime/squirrel/actions/workflows/commit-ci.yml/badge.svg)](https://github.com/rime/squirrel/actions/workflows)
 [![GitHub Tag](https://img.shields.io/github/tag/rime/squirrel.svg)](https://github.com/rime/squirrel)
 
 式恕堂 版權所無
@@ -22,13 +22,13 @@
 
 您可能還需要 Rime 用於其他操作系統的發行版：
 
-  * ibus-rime 及 fcitx-rime 用於 Linux
-  * 【小狼毫】用於 Windows XP, Windows 7 ~ Windows 10
+  * 【中州韻】（ibus-rime、fcitx-rime）用於 Linux
+  * 【小狼毫】用於 Windows
 
 安裝輸入法
 ---
 
-本品適用於 macOS 12.0+
+本品適用於 macOS 13.0+
 
 初次安裝，如果在部份應用程序中打不出字，請註銷並重新登錄。
 
@@ -99,8 +99,7 @@
 問題與反饋
 ---
 
-發現程序有 BUG，或建議，或感想，請反饋到
-https://github.com/rime/home/issues
+發現程序有 BUG，或建議，或感想，請反饋到 [Rime 代碼之家討論區](https://github.com/rime/home/discussions)
 
 聯繫方式
 ---
