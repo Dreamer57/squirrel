@@ -463,6 +463,7 @@ private extension SquirrelInputController {
       let caretPos = String.Index(preedit.utf8.index(preedit.utf8.startIndex, offsetBy: Int(ctx.composition.cursor_pos)), within: preedit) ?? preedit.startIndex
 
       // dr57 begin
+      var orgInlineCandidate = inlineCandidate
       var rawInput = ""
       if let cInput = rimeAPI.get_input(session), let inputStr = String(utf8String: cInput) {
         rawInput = inputStr
@@ -526,6 +527,8 @@ private extension SquirrelInputController {
       }
       
       // dr57 begin
+      // 还原inlineCandidate。这是一个全局状态变量，所以需要还原。
+      inlineCandidate = orgInlineCandidate
       // 开关：隐藏候选栏。
       // 开关打开了，并且有候选项时隐藏候选栏。正常显示开关通知消息。
       if isHideCandidates {
