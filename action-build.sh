@@ -13,7 +13,7 @@ target="${1:-release}"
 # make deps
 
 # build Squirrel
-# make MACOSX_DEPLOYMENT_TARGET='13.0' "${target}"
+# make "${target}"
 make ARCHS='arm64' MACOSX_DEPLOYMENT_TARGET='13.0' "${target}"
 
 echo 'Installer package:'
