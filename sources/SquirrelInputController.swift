@@ -468,7 +468,7 @@ private extension SquirrelInputController {
       if let cInput = rimeAPI.get_input(session), let inputStr = String(utf8String: cInput) {
         rawInput = inputStr
       }
-      let dr57_schemaId = "wubi86_dr57"
+      let mySchema = "wubi86_dr57"
       var firstChar: Character = "\u{2005}"
       var isLookup = false
       if let first = rawInput.first {
@@ -477,7 +477,7 @@ private extension SquirrelInputController {
         isLookup = lookupPrefixChars.contains(firstChar)
       }
 
-      if inlineCandidate && schemaId == dr57_schemaId {
+      if inlineCandidate && schemaId == mySchema {
         NSApp.squirrelAppDelegate.panel?.isLookup = isLookup
         // 是否内嵌第一个候选。
         inlineCandidate = !isLookup
