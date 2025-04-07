@@ -249,10 +249,12 @@ final class SquirrelPanel: NSPanel {
       if isBigFont {
         attrs = i == index ? theme.bigHighlightedAttrs : theme.bigAttrs
       }
-      // 没有 comment的时候，消除前面的空格
+      // 没有 comment的时候，消除前面的空格。可以在配置的时候就不加间隔：
+      // [label]\u2005[candidate][comment]
       var noCommentCandidateFormat = theme.candidateFormat
       if comment.isEmpty {
         noCommentCandidateFormat.replace(" [comment]", with: "")
+        noCommentCandidateFormat.replace("\u{2005}[comment]", with: "")
       }
       // 紧接着的下一行的org
       //let line = NSMutableAttributedString(string: theme.candidateFormat, attributes: labelAttrs)
