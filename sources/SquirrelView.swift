@@ -250,13 +250,7 @@ final class SquirrelView: NSView {
       layer.mask = mask
       panelLayer.addSublayer(layer)
     }
-    if theme.borderLineWidth > 0, let color = theme.borderColor {
-      let borderLayer = shapeFromPath(path: backgroundPath)
-      borderLayer.lineWidth = theme.borderLineWidth * 2
-      borderLayer.strokeColor = color.cgColor
-      borderLayer.fillColor = nil
-      panelLayer.addSublayer(borderLayer)
-    }
+    // dr57 begin {org loc} dr57 end
     if let color = theme.highlightedPreeditColor, let path = highlightedPreeditPath {
       let layer = shapeFromPath(path: path)
       layer.fillColor = color.cgColor
@@ -287,6 +281,17 @@ final class SquirrelView: NSView {
       }
       panelLayer.addSublayer(layer)
     }
+    // dr57 begin
+    // moved
+    // 从上面移到这里，避免border被highlightedBackColor覆盖。
+    if theme.borderLineWidth > 0, let color = theme.borderColor {
+      let borderLayer = shapeFromPath(path: backgroundPath)
+      borderLayer.lineWidth = theme.borderLineWidth * 2
+      borderLayer.strokeColor = color.cgColor
+      borderLayer.fillColor = nil
+      panelLayer.addSublayer(borderLayer)
+    }
+    // dr57 end
     panelLayer.setAffineTransform(CGAffineTransform(translationX: theme.pagingOffset, y: 0))
     let panelPath = CGMutablePath()
     panelPath.addPath(backgroundPath!, transform: panelLayer.affineTransform().scaledBy(x: 1, y: -1).translatedBy(x: 0, y: -dirtyRect.height))
