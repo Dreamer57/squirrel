@@ -427,10 +427,6 @@ private extension SquirrelInputController {
   func rimeUpdate() {
     // print("[DEBUG] rimeUpdate")
     rimeConsumeCommittedText()
-
-    // dr57 begin
-    var isHideCandidates = false
-    // dr57 end
     
     var status = RimeStatus_stdbool.rimeStructInit()
     if rimeAPI.get_status(session, &status) {
@@ -446,9 +442,6 @@ private extension SquirrelInputController {
           // if not inline, embed soft cursor in preedit string
           rimeAPI.set_option(session, "soft_cursor", !inlinePreedit)
         }
-        // dr57 begin
-        isHideCandidates = rimeAPI.get_option(session, "hide_candidates")
-        // dr57 end
       }
       _ = rimeAPI.free_status(&status)
     }
@@ -530,8 +523,9 @@ private extension SquirrelInputController {
       // 还原inlineCandidate。这是一个全局状态变量，所以需要还原。
       inlineCandidate = orgInlineCandidate
       // 开关：隐藏候选栏。
-      // 开关打开了，并且有候选项时隐藏候选栏。正常显示开关通知消息。
+      let isHideCandidates = rimeAPI.get_option(session, "hide_candidates")
       if isHideCandidates {
+        // 开关打开了，并且有候选项时隐藏候选栏。正常显示开关通知消息。
         if ctx.menu.num_candidates > 0 && !isLookup {
           NSApp.squirrelAppDelegate.panel?.hide()
           _ = rimeAPI.free_context(&ctx)
