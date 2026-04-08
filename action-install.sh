@@ -2,8 +2,13 @@
 
 set -e
 
+<<<<<<< HEAD
 rime_version=1.13.1
 rime_git_hash="8f7048d"
+=======
+rime_version=1.16.1
+rime_git_hash="de4700e"
+>>>>>>> master
 sparkle_version=2.6.2
 
 rime_archive="rime-${rime_git_hash}-macOS-universal.tar.bz2"

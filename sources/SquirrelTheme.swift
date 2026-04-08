@@ -39,14 +39,14 @@ final class SquirrelTheme {
   var candidateBackColor: NSColor?
   var borderColor: NSColor?
 
-  private var textColor: NSColor = .tertiaryLabelColor
+  private var textColor: NSColor = .secondaryLabelColor
   private var highlightedTextColor: NSColor = .labelColor
-  private var candidateTextColor: NSColor = .secondaryLabelColor
+  private var candidateTextColor: NSColor = .labelColor
   private var highlightedCandidateTextColor: NSColor = .labelColor
-  private var candidateLabelColor: NSColor?
-  private var highlightedCandidateLabelColor: NSColor?
-  private var commentTextColor: NSColor? = .tertiaryLabelColor
-  private var highlightedCommentTextColor: NSColor?
+  private var candidateLabelColor: NSColor? = .secondaryLabelColor
+  private var highlightedCandidateLabelColor: NSColor? = .secondaryLabelColor
+  private var commentTextColor: NSColor? = .secondaryLabelColor
+  private var highlightedCommentTextColor: NSColor? = .secondaryLabelColor
 
   // dr57 begin
   // 美化候选框
